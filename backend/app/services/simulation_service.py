@@ -7,7 +7,11 @@ from datetime import datetime, timezone
 from typing import Dict, Optional, List
 from backend.app.config import SIMULATION_TICK_INTERVAL_SECONDS
 from backend.app.models.database import get_connection
-from backend.app.services.sensor_validation import validate_sensor_reading
+from backend.app.services.sensor_validation import (
+    validate_sensor_reading,
+    MIN_PLAUSIBLE_TEMP_C,
+    MAX_PLAUSIBLE_TEMP_C,
+)
 from backend.app.services.excursion_engine import process_reading_for_excursions
 from backend.app.services.alert_service import create_or_update_alert
 from backend.app.services.shipment_service import get_shipment_by_id, update_shipment_status
@@ -22,6 +26,8 @@ class SimulationService:
         self._sensor_history: Dict[str, List[Optional[float]]] = {}
         # Step counter for scenario animation per shipment
         self._step_counters: Dict[str, int] = {}
+        # Tracks underlying smooth physical temperature per sensor: sensor_id -> float
+        self._current_temps: Dict[str, float] = {}
 
     def is_running(self, shipment_id: str) -> bool:
         task = self._tasks.get(shipment_id)
@@ -130,62 +136,111 @@ class SimulationService:
             sensor_offset = (idx - len(shp.sensors) / 2.0) * 0.1
             noise = random.gauss(0, noise_std)
 
-            if scenario == "normal":
-                raw_temp = round(baseline_temp + sensor_offset + noise, 2)
-
-            elif scenario == "gradual_warming":
-                # Ramps upward from baseline to across upper limit over 8 steps (~12s)
-                ramp = (step / 8.0) * (range_span * 1.2)
-                raw_temp = round(baseline_temp + ramp + sensor_offset + noise, 2)
-
-            elif scenario == "gradual_cooling":
-                # Ramps downward from baseline to across lower limit over 8 steps (~12s)
-                ramp = (step / 8.0) * (range_span * 1.2)
-                raw_temp = round(baseline_temp - ramp + sensor_offset + noise, 2)
-
-            elif scenario == "sudden_spike":
-                # Jumps directly 4.5°C above upper limit
-                if step >= 1:
-                    raw_temp = round(upper_limit + 4.5 + sensor_offset + noise, 2)
+            # Retrieve or initialize underlying core physical temperature
+            current_core = self._current_temps.get(sensor_id)
+            if current_core is None or not (MIN_PLAUSIBLE_TEMP_C <= current_core <= MAX_PLAUSIBLE_TEMP_C):
+                if sensor.last_valid_temperature_c is not None and (
+                    MIN_PLAUSIBLE_TEMP_C <= sensor.last_valid_temperature_c <= MAX_PLAUSIBLE_TEMP_C
+                ):
+                    current_core = float(sensor.last_valid_temperature_c)
                 else:
-                    raw_temp = round(baseline_temp + noise, 2)
+                    current_core = baseline_temp + sensor_offset
 
-            elif scenario == "sudden_drop":
-                # Drops 4.5°C below lower limit
-                if step >= 1:
-                    raw_temp = round(lower_limit - 4.5 + sensor_offset + noise, 2)
-                else:
-                    raw_temp = round(baseline_temp + noise, 2)
-
-            elif scenario == "repeated_fluctuations":
-                # Sinusoidal wave crossing upper and lower limits
-                oscillation = math.sin(step * 0.4) * (range_span * 0.8)
-                raw_temp = round(mid_temp + oscillation + sensor_offset + noise, 2)
-
-            elif scenario == "stuck":
-                # Sensor 1 freezes at exactly the same float value
-                if idx == 0 and step >= 2:
-                    raw_temp = 5.25  # Frozen identical value
-                else:
-                    raw_temp = round(baseline_temp + sensor_offset + noise, 2)
-
-            elif scenario == "disconnected":
-                # Sensor 1 telemetry feed cuts out after step 2
+            # Fault injection scenarios
+            if scenario == "disconnected":
                 if idx == 0 and step >= 2:
                     is_disconnected = True
                     raw_temp = None
                 else:
-                    raw_temp = round(baseline_temp + sensor_offset + noise, 2)
+                    target_temp = baseline_temp + sensor_offset
+                    max_step = max(2.2, min(8.0, range_span * 0.38))
+                    diff = target_temp - current_core
+                    step_delta = max(-max_step, min(max_step, diff))
+                    current_core = current_core + step_delta
+                    raw_temp = round(current_core + noise, 2)
+                    self._current_temps[sensor_id] = current_core
 
             elif scenario == "implausible":
-                # Sensor 1 outputs unphysical 150°C telemetry
+                # Explicit hardware fault injection: sensor 0 outputs unphysical reading
                 if idx == 0 and step >= 2:
                     raw_temp = 148.5
+                    # Do not contaminate current_core so sensor can smoothly resume when scenario changes
                 else:
-                    raw_temp = round(baseline_temp + sensor_offset + noise, 2)
+                    target_temp = baseline_temp + sensor_offset
+                    max_step = max(2.2, min(8.0, range_span * 0.38))
+                    diff = target_temp - current_core
+                    step_delta = max(-max_step, min(max_step, diff))
+                    current_core = current_core + step_delta
+                    raw_temp = round(current_core + noise, 2)
+                    self._current_temps[sensor_id] = current_core
+
+            elif scenario == "stuck":
+                # Sensor 0 freezes at exact telemetry value
+                if idx == 0 and step >= 2:
+                    raw_temp = round(current_core, 2)
+                else:
+                    target_temp = baseline_temp + sensor_offset
+                    max_step = max(2.2, min(8.0, range_span * 0.38))
+                    diff = target_temp - current_core
+                    step_delta = max(-max_step, min(max_step, diff))
+                    current_core = current_core + step_delta
+                    raw_temp = round(current_core + noise, 2)
+                    self._current_temps[sensor_id] = current_core
 
             else:
-                raw_temp = round(baseline_temp + sensor_offset + noise, 2)
+                # Continuous, demo-optimized smooth thermal progression
+                if scenario == "gradual_warming":
+                    # Continuously climbs without an artificial ceiling at 10°C,
+                    # advancing steadily each tick while bounded safely below physical limits (80°C).
+                    step_increment = max(1.8, min(4.5, range_span * 0.3))
+                    current_core = current_core + step_increment
+                    current_core = min(MAX_PLAUSIBLE_TEMP_C - 5.0, current_core)
+
+                elif scenario == "gradual_cooling":
+                    # Continuously drops downwards without an artificial ceiling,
+                    # dropping steadily each tick while bounded safely above physical limits (-210°C).
+                    step_increment = max(1.8, min(4.5, range_span * 0.3))
+                    current_core = current_core - step_increment
+                    current_core = max(MIN_PLAUSIBLE_TEMP_C + 5.0, current_core)
+
+                elif scenario == "sudden_spike":
+                    # Rapid heat surge into elevated ambient territory (e.g. 25°C-30°C for standard biologic)
+                    spike_target = upper_limit + max(12.0, min(30.0, range_span * 2.0)) + sensor_offset
+                    max_step = max(4.0, min(14.0, range_span * 0.65))
+                    diff = spike_target - current_core
+                    step_delta = max(-max_step, min(max_step, diff))
+                    current_core = current_core + step_delta
+                    current_core = min(MAX_PLAUSIBLE_TEMP_C - 5.0, current_core)
+
+                elif scenario == "sudden_drop":
+                    # Rapid cooling drop into deep sub-zero territory
+                    drop_target = lower_limit - max(12.0, min(30.0, range_span * 2.0)) + sensor_offset
+                    max_step = max(4.0, min(14.0, range_span * 0.65))
+                    diff = drop_target - current_core
+                    step_delta = max(-max_step, min(max_step, diff))
+                    current_core = current_core + step_delta
+                    current_core = max(MIN_PLAUSIBLE_TEMP_C + 5.0, current_core)
+
+                elif scenario == "repeated_fluctuations":
+                    # Demo-paced sinusoidal oscillation completing full wave in ~12-15s
+                    oscillation = math.sin(step * 0.55) * (range_span * 0.8)
+                    target_temp = mid_temp + oscillation + sensor_offset
+                    max_step = max(2.5, min(8.0, range_span * 0.4))
+                    diff = target_temp - current_core
+                    step_delta = max(-max_step, min(max_step, diff))
+                    current_core = current_core + step_delta
+                    current_core = max(MIN_PLAUSIBLE_TEMP_C + 5.0, min(MAX_PLAUSIBLE_TEMP_C - 5.0, current_core))
+
+                else:  # "normal" or recovery mode: smoothly return to baseline in 2-3 ticks
+                    target_temp = baseline_temp + sensor_offset
+                    max_step = max(2.5, min(8.0, range_span * 0.4))
+                    diff = target_temp - current_core
+                    step_delta = max(-max_step, min(max_step, diff))
+                    current_core = current_core + step_delta
+                    current_core = max(MIN_PLAUSIBLE_TEMP_C + 5.0, min(MAX_PLAUSIBLE_TEMP_C - 5.0, current_core))
+
+                self._current_temps[sensor_id] = current_core
+                raw_temp = round(current_core + noise, 2)
 
             # Validate reading
             validation = validate_sensor_reading(

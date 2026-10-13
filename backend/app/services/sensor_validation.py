@@ -39,13 +39,18 @@ def validate_sensor_reading(
 
     # Check unphysical instantaneous jump
     if recent_readings_c:
-        last_temp = recent_readings_c[-1]
-        if last_temp is not None and abs(current_temp_c - last_temp) > MAX_PHYSICAL_TICK_DELTA_C:
-            return ValidationResult(
-                quality_status="implausible",
-                is_valid_for_excursion=False,
-                diagnostic_reason=f"Unphysical temperature discontinuity: jumped {abs(current_temp_c - last_temp):.1f}°C in one tick.",
-            )
+        plausible_history = [
+            t for t in recent_readings_c
+            if t is not None and MIN_PLAUSIBLE_TEMP_C <= t <= MAX_PLAUSIBLE_TEMP_C
+        ]
+        if plausible_history:
+            last_temp = plausible_history[-1]
+            if abs(current_temp_c - last_temp) > MAX_PHYSICAL_TICK_DELTA_C:
+                return ValidationResult(
+                    quality_status="implausible",
+                    is_valid_for_excursion=False,
+                    diagnostic_reason=f"Unphysical temperature discontinuity: jumped {abs(current_temp_c - last_temp):.1f}°C in one tick.",
+                )
 
     # Check stuck sensor rule (identical float value for >= STUCK_CONSECUTIVE_THRESHOLD samples)
     if len(recent_readings_c) >= STUCK_CONSECUTIVE_THRESHOLD - 1:

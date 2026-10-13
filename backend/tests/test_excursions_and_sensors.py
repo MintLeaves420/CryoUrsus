@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timezone
-from backend.app.models.database import init_db
+from backend.app.models.database import init_db, get_connection
 from backend.app.services.sensor_validation import validate_sensor_reading
 from backend.app.services.excursion_engine import process_reading_for_excursions
 from backend.app.services.shipment_service import create_shipment, get_shipment_by_id
@@ -68,3 +68,52 @@ def test_excursion_engine_upper_and_lower_breaches():
 
     active_alerts = list_alerts(shipment_id=shp.id, status="active")
     assert len(active_alerts) == 0
+
+def test_simulation_smoothed_transitions_no_implausible_jumps():
+    import asyncio
+    async def _test():
+        from backend.app.services.simulation_service import simulation_service
+        from backend.app.services.shipment_service import update_shipment_scenario
+
+        # Test with both standard and ultra-cold mRNA profiles
+        for profile_id in ["demo-profile-standard-mab", "demo-profile-ultracold-mrna"]:
+            shp = create_shipment(ShipmentCreateRequest(
+                profile_id=profile_id,
+                vial_count=5,
+                sensor_count=2,
+                scenario="normal",
+            ))
+
+            # Run 10 ticks in normal mode
+            for step in range(10):
+                await simulation_service._process_tick(shp, step)
+
+            # Switch to gradual warming for 25 ticks
+            update_shipment_scenario(shp.id, "gradual_warming")
+            shp = get_shipment_by_id(shp.id)
+            for step in range(10, 35):
+                await simulation_service._process_tick(shp, step)
+
+            # Switch to sudden drop
+            update_shipment_scenario(shp.id, "sudden_drop")
+            shp = get_shipment_by_id(shp.id)
+            for step in range(35, 45):
+                await simulation_service._process_tick(shp, step)
+
+            # Switch back to normal
+            update_shipment_scenario(shp.id, "normal")
+            shp = get_shipment_by_id(shp.id)
+            for step in range(45, 55):
+                await simulation_service._process_tick(shp, step)
+
+            # Verify that NO readings have quality_status == 'implausible'
+            with get_connection() as conn:
+                implausible_count = conn.execute(
+                    "SELECT COUNT(*) as cnt FROM readings WHERE shipment_id = ? AND quality_status = 'implausible'",
+                    (shp.id,),
+                ).fetchone()["cnt"]
+
+                assert implausible_count == 0, f"Found {implausible_count} implausible readings in smooth simulation for {profile_id}"
+
+    asyncio.run(_test())
+
