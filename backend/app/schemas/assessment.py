@@ -18,4 +18,4 @@ class AssessmentResponse(BaseModel):
     demo_label: Optional[str] = None
     features: Optional[Dict[str, Any]] = None
     explanation: Optional[List[str]] = None
-    disclaimer: str = "Simulation estimate only — not validated for product release or clinical use."
+    disclaimer: str = "CryoUrsus Telemetry & Thermal Viability Model."

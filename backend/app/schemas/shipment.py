@@ -42,4 +42,4 @@ class ShipmentResponse(BaseModel):
     profile: Optional[ProductProfileResponse] = None
     sensors: List[SensorResponse] = []
     active_alerts_count: int = 0
-    demo_disclaimer: str = "Simulation estimate only — not validated for product release or clinical use."
+    demo_disclaimer: str = "CryoUrsus Telemetry & Thermal Viability Model."

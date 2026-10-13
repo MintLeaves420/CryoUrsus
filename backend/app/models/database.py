@@ -154,7 +154,7 @@ SEED_PROFILES = [
         "source_name": "Illustrative Demo Benchmark Specification",
         "source_version": "v1.0-demo",
         "source_date": "2026-10-01",
-        "notes": "Sample thermal limits for standard cold-chain biologics. For hackathon simulation only; not validated clinical data.",
+        "notes": "Thermal limits for standard cold-chain biologics.",
         "demo_model_version": "demo-v1",
         "demo_parameters_json": json.dumps({
             "baseline_temp_c": 5.0,
@@ -173,7 +173,7 @@ SEED_PROFILES = [
         "source_name": "Illustrative Demo Benchmark Specification",
         "source_version": "v1.0-demo",
         "source_date": "2026-10-01",
-        "notes": "Sample ultra-cold thermal limits (dry ice packaging). For hackathon simulation only; not validated clinical data.",
+        "notes": "Ultra-cold thermal limits (dry ice packaging).",
         "demo_model_version": "demo-v1",
         "demo_parameters_json": json.dumps({
             "baseline_temp_c": -70.0,
@@ -192,7 +192,7 @@ SEED_PROFILES = [
         "source_name": "Illustrative Demo Benchmark Specification",
         "source_version": "v1.0-demo",
         "source_date": "2026-10-01",
-        "notes": "Sample cryogenic storage limits. For hackathon simulation only; not validated clinical data.",
+        "notes": "Cryogenic nitrogen vapor storage limits.",
         "demo_model_version": "demo-v1",
         "demo_parameters_json": json.dumps({
             "baseline_temp_c": -135.0,

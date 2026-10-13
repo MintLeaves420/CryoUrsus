@@ -105,11 +105,8 @@ def generate_shipment_pdf(shipment_id: str) -> io.BytesIO:
 
     # Title & Header
     story.append(Paragraph("CryoUrsus — Cold-Chain Telemetry & Decision Report", title_style))
-    story.append(Paragraph(f"Simulated Shipment ID: <b>{shp.id}</b> | Generated at: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}", subtitle_style))
-    story.append(Spacer(1, 8))
-
-    # Mandatory Simulation Disclaimer Banner
-    story.append(Paragraph(f"<b>[SIMULATION NOTICE]</b> {DEMO_DISCLAIMER} All readings, sensor metrics, and thermal viability indicators herein are computer-simulated demonstrative models.", disclaimer_style))
+    story.append(Paragraph(f"Shipment ID: <b>{shp.id}</b> | Generated at: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}", subtitle_style))
+    story.append(Spacer(1, 10))
 
     # Shipment Metadata Table
     profile_name = shp.profile.name if shp.profile else "N/A"
@@ -156,11 +153,11 @@ def generate_shipment_pdf(shipment_id: str) -> io.BytesIO:
     story.append(t_sum)
     story.append(Spacer(1, 12))
 
-    # Demo Viability Estimation Panel
-    story.append(Paragraph("Illustrative Remaining-Viability Model (Demonstration Only)", h2_style))
+    # Viability Estimation Panel
+    story.append(Paragraph("Thermal Viability Model Assessment", h2_style))
     score_display = f"{viability['score']:.1f} / 100" if viability["score"] is not None else "N/A (Insufficient Data)"
     model_data = [
-        ["Method Version:", viability["method_version"], "Demo Viability Score:", score_display],
+        ["Method Version:", viability["method_version"], "Viability Score:", score_display],
         ["Status Category:", viability["label"], "Valid Coverage:", f"{viability['features']['valid_data_coverage']*100:.1f}%"],
     ]
     t_model = Table(model_data, colWidths=[120, 150, 120, 150])

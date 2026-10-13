@@ -18,4 +18,4 @@ class ShipmentSummaryResponse(BaseModel):
     demo_label: Optional[str] = None
     explanation: List[str] = []
     method_version: str = "demo-v1"
-    disclaimer: str = "Simulation estimate only — not validated for product release or clinical use."
+    disclaimer: str = "CryoUrsus Telemetry & Thermal Viability Model."

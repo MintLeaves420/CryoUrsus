@@ -29,7 +29,7 @@ def test_viability_estimator_determinism():
     res_b = calculate_demo_viability(valid_readings_count=90, total_readings=100, excursion_events=exc_sample)
     assert res_a["score"] == res_b["score"]
     assert res_a["score"] < 100.0
-    assert "Simulation estimate only" in res_a["disclaimer"]
+    assert "CryoUrsus" in res_a["disclaimer"]
 
 def test_nfc_and_pdf_generation():
     shp = create_shipment(ShipmentCreateRequest(

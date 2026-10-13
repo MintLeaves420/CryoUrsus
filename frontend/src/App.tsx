@@ -242,8 +242,8 @@ export const App: React.FC = () => {
           <span style={{ margin: '0 8px' }}>•</span>
           <span>FastAPI + SQLite + React 3D</span>
         </div>
-        <div style={{ color: '#fde68a' }}>
-          Simulated Demonstration Only — Not Validated for Real Biologics Release
+        <div>
+          <span>Active Telemetry Monitoring System</span>
         </div>
       </footer>
 

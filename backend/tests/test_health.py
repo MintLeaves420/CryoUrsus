@@ -8,4 +8,4 @@ def test_health_check():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert "Simulation estimate only" in data["disclaimer"]
+    assert "CryoUrsus" in data["disclaimer"]

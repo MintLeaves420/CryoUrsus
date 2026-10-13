@@ -114,13 +114,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </header>
 
-      {/* Mandatory Safety Notice / Simulation Disclaimer Banner */}
-      <div className="disclaimer-banner">
-        <span>⚠️</span>
-        <span>
-          <b>[SIMULATION NOTICE]</b> This is an interactive hackathon demonstration. Outputs are simulated illustrative models and are <b>not validated</b> for real biologic release or clinical decision-making.
-        </span>
-      </div>
     </>
   );
 };

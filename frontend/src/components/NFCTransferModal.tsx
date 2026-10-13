@@ -247,16 +247,6 @@ export const NFCTransferModal: React.FC<NFCTransferModalProps> = ({
             </>
           )}
 
-          {/* Educational Disclaimer */}
-          <div style={{
-            fontSize: '0.725rem',
-            color: 'var(--text-dim)',
-            borderTop: '1px solid var(--border-subtle)',
-            paddingTop: '0.75rem',
-            width: '100%',
-          }}>
-            Simulation Notice: Software emulation of physical cold-chain NFC data transfer for demonstration purposes.
-          </div>
         </div>
       </div>
     </div>

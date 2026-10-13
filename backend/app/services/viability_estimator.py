@@ -106,9 +106,7 @@ def calculate_demo_viability(
             f"Deterministic penalty of {penalty:.1f} points applied using model profile '{METHOD_VERSION}'.",
         ]
 
-    explanation_lines.append(
-        "Notice: This score is a mathematical demonstration for hackathon evaluation and does not represent verified biologic potency."
-    )
+
 
     return {
         "status": "demo_estimate",

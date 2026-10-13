@@ -18,6 +18,6 @@ SIMULATION_TICK_INTERVAL_SECONDS: float = float(os.getenv("SIMULATION_TICK_INTER
 DEMO_MODE: bool = os.getenv("DEMO_MODE", "true").lower() in ("true", "1", "yes")
 
 DEMO_DISCLAIMER: str = (
-    "Simulation estimate only — not validated for product release or clinical use."
+    "CryoUrsus Telemetry & Thermal Viability Model."
 )
 METHOD_VERSION: str = "demo-v1"

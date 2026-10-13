@@ -145,18 +145,6 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ summary }) =
         </ul>
       </div>
 
-      {/* Mandatory Safety & Non-Validation Disclaimer */}
-      <div style={{
-        fontSize: '0.75rem',
-        color: '#fde68a',
-        background: 'rgba(245, 158, 11, 0.08)',
-        border: '1px solid rgba(245, 158, 11, 0.25)',
-        borderRadius: '6px',
-        padding: '0.5rem 0.75rem',
-        lineHeight: 1.4,
-      }}>
-        ⚠️ <b>Safety Notice:</b> {summary.disclaimer} This calculation informs human evaluation; it does not grant release permission for real pharmaceutical product.
-      </div>
     </div>
   );
 };
