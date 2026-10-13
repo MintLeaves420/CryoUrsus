@@ -1,0 +1,62 @@
+{
+  "model_name": "CryoUrsus_Viability_RandomForest",
+  "version": "1.0.0",
+  "algorithm": "RandomForestRegressor",
+  "target": "viability_pct",
+  "input_features": {
+    "categorical": [
+      "biological_type"
+    ],
+    "numeric": [
+      "heat_grade_1_time_sec",
+      "heat_grade_2_time_sec",
+      "heat_grade_3_time_sec",
+      "cold_grade_1_time_sec",
+      "cold_grade_2_time_sec",
+      "cold_grade_3_time_sec",
+      "grade_1_time_sec",
+      "grade_2_time_sec",
+      "grade_3_time_sec",
+      "excursion_count",
+      "heat_excursion_count",
+      "cold_excursion_count",
+      "total_excursion_time_sec",
+      "longest_excursion_sec",
+      "max_grade_reached"
+    ]
+  },
+  "transformed_feature_names": [
+    "cat__biological_type_cryopreserved_cell_therapy",
+    "cat__biological_type_mRNA_vaccine",
+    "cat__biological_type_monoclonal_antibody",
+    "num__heat_grade_1_time_sec",
+    "num__heat_grade_2_time_sec",
+    "num__heat_grade_3_time_sec",
+    "num__cold_grade_1_time_sec",
+    "num__cold_grade_2_time_sec",
+    "num__cold_grade_3_time_sec",
+    "num__grade_1_time_sec",
+    "num__grade_2_time_sec",
+    "num__grade_3_time_sec",
+    "num__excursion_count",
+    "num__heat_excursion_count",
+    "num__cold_excursion_count",
+    "num__total_excursion_time_sec",
+    "num__longest_excursion_sec",
+    "num__max_grade_reached"
+  ],
+  "metrics": {
+    "train": {
+      "mae": 0.6236,
+      "rmse": 0.8665,
+      "r2": 0.9908
+    },
+    "test": {
+      "mae": 1.7282,
+      "rmse": 2.3327,
+      "r2": 0.9423
+    }
+  },
+  "sample_count": 300,
+  "disclaimer": "Synthetic simulation estimate, not a validated biological stability assessment."
+}

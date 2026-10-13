@@ -45,6 +45,8 @@ def generate_shipment_pdf(shipment_id: str) -> io.BytesIO:
         valid_readings_count=valid_readings,
         total_readings=total_readings,
         excursion_events=excursions,
+        shipment_id=shipment_id,
+        profile=shp.profile if shp else None,
     )
 
     buffer = io.BytesIO()

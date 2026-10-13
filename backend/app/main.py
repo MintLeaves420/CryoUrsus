@@ -20,6 +20,9 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing CryoUrsus SQLite database and seed profiles...")
     init_db()
     logger.info("Database initialized successfully.")
+    logger.info("Loading pre-trained CryoUrsus ML Viability Model into memory...")
+    from backend.app.services.viability_estimator import load_ml_model
+    load_ml_model()
     yield
     logger.info("CryoUrsus Backend shutting down...")
 

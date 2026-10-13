@@ -1,7 +1,16 @@
 import urllib.request
 import json
 import time
+import pytest
 
+def is_server_running(url: str = "http://127.0.0.1:8000/api/profiles") -> bool:
+    try:
+        with urllib.request.urlopen(url, timeout=1.0) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
+
+@pytest.mark.skipif(not is_server_running(), reason="Live backend server is not running on port 8000")
 def test_live_server_full_cycle():
     base = "http://127.0.0.1:8000/api"
 

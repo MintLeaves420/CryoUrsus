@@ -33,14 +33,14 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ summary }) =
         <div>
           <h3 style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span>🧬</span>
-            <span>Illustrative Viability Model</span>
+            <span>ML Viability Prediction</span>
           </h3>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-            Transparent Deterministic Decision Support • Method: {summary.method_version}
+            RandomForest Regression + SHAP Explainability • Method: {summary.method_version}
           </span>
         </div>
         <span className="badge badge-purple">
-          {isInsufficient ? 'NO CONFIDENCE' : 'DEMO ESTIMATE'}
+          {isInsufficient ? 'NO CONFIDENCE' : 'ML ESTIMATE'}
         </span>
       </div>
 
@@ -75,7 +75,7 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ summary }) =
           }}>
             {isInsufficient ? 'N/A' : score.toFixed(1)}
           </span>
-          {!isInsufficient && <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>/ 100</span>}
+          {!isInsufficient && <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>%</span>}
         </div>
 
         {/* Status description */}
@@ -92,7 +92,7 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ summary }) =
       {/* Extracted Features Grid */}
       <div>
         <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-dim)', marginBottom: '0.5rem', fontWeight: 600 }}>
-          Deterministic Input Features:
+          Excursion Grade Inputs:
         </div>
         <div style={{
           display: 'grid',
@@ -132,16 +132,27 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ summary }) =
 
       {/* Decision Factors & Plain Language Reasoning */}
       <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-          Decision Path & Rules:
+        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <span>🔍</span>
+          <span>SHAP Feature Attribution & Decision Insights:</span>
         </div>
         <ul style={{ listStyleType: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.8rem', color: 'var(--text-main)' }}>
-          {summary.explanation.map((item, idx) => (
-            <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem' }}>
-              <span style={{ color: 'var(--accent-cyan)' }}>•</span>
-              <span>{item}</span>
-            </li>
-          ))}
+          {summary.explanation.map((item, idx) => {
+            const isShap = item.startsWith('SHAP Impact:');
+            return (
+              <li key={idx} style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.4rem',
+                background: isShap ? 'rgba(56, 189, 248, 0.06)' : 'transparent',
+                padding: isShap ? '0.2rem 0.4rem' : '0',
+                borderRadius: '4px',
+              }}>
+                <span style={{ color: isShap ? 'var(--accent-cyan)' : 'var(--accent-emerald)' }}>•</span>
+                <span style={{ color: isShap ? '#e0f2fe' : 'inherit' }}>{item}</span>
+              </li>
+            );
+          })}
         </ul>
       </div>
 

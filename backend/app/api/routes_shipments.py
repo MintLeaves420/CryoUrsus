@@ -163,6 +163,8 @@ def get_shipment_summary(shipment_id: str):
         total_readings=total_cnt,
         excursion_events=excursions,
         demo_parameters=params,
+        shipment_id=shipment_id,
+        profile=shp.profile,
     )
 
     coverage = valid_cnt / total_cnt if total_cnt > 0 else 0.0
@@ -184,8 +186,8 @@ def get_shipment_summary(shipment_id: str):
         demo_score=viability["score"],
         demo_label=viability["label"],
         explanation=viability["explanation"],
-        method_version=METHOD_VERSION,
-        disclaimer=DEMO_DISCLAIMER,
+        method_version=viability.get("method_version", METHOD_VERSION),
+        disclaimer=viability.get("disclaimer", DEMO_DISCLAIMER),
     )
 
 @router.get("/{shipment_id}/events")
@@ -232,6 +234,8 @@ def get_shipment_assessment(shipment_id: str):
         valid_readings_count=valid_cnt,
         total_readings=total_cnt,
         excursion_events=excursions,
+        shipment_id=shipment_id,
+        profile=shp.profile,
     )
 
     if row:
@@ -287,6 +291,8 @@ async def submit_shipment_assessment(shipment_id: str, req: AssessmentCreateRequ
         valid_readings_count=valid_cnt,
         total_readings=total_cnt,
         excursion_events=excursions,
+        shipment_id=shipment_id,
+        profile=shp.profile,
     )
 
     assessment_id = f"asm_{uuid.uuid4().hex[:8]}"
