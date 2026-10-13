@@ -18,6 +18,7 @@ biologics are safe for use.
     constraints.
 -   `Docs\software-architecture.md` --- system components, data flow,
     simulation, real-time events, decisions.
+-   `Docs\ML_PIPELINE.md` --- machine learning regression architecture, temperature grades, features, and SHAP explainability.
 -   `Docs\data-model.md` --- logical SQLite entities, fields, relationships,
     and status semantics.
 -   `Docs\API.md` --- proposed REST/WebSocket contract.
@@ -29,6 +30,7 @@ biologics are safe for use.
 -   React + TypeScript + Vite
 -   Three.js / React Three Fiber for the 3D package scene
 -   FastAPI + Pydantic
+-   Scikit-Learn + SHAP + Joblib (Offline ML Viability & Explainability)
 -   SQLite
 -   Recharts
 -   ReportLab for PDF generation
@@ -42,6 +44,12 @@ working starter code where possible.
 ### Prerequisites
 - Node.js 18+ & npm
 - Python 3.10+
+
+### Train the ML Model (Offline / On-Demand)
+```powershell
+# Trains Random Forest regressor and outputs backend/ml/artifacts/viability_model.joblib
+.\backend\venv\Scripts\python backend\ml\train_model.py
+```
 
 ### Backend Setup & Run
 ```powershell
